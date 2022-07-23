@@ -9,19 +9,13 @@ import SwiftUI
 import Firebase
 import FirebaseFirestore
 
+
 struct MainView: View {
     
-    func registerUser() {
-        Auth.auth().createUser(withEmail: email, password: password) { result, error in
-            if error != nil {
-                print("Incorrect info")
-            }
-            
-        }
-    }
+
 
         
-        @ObservedObject var model = ViewModel()
+    @ObservedObject var model = ViewModel()
         
     @State private var email = "" //Check if should be @State
     @State private var password = "" //Check if should be @State
@@ -36,7 +30,7 @@ struct MainView: View {
     }
     
     var content: some View {
-       // NavigationView {
+        NavigationView {
             
             
             ZStack {
@@ -99,7 +93,7 @@ struct MainView: View {
                             
                             
                             Button {
-                                login()
+                                model.login()
                             } label: {
                                 Text("Log In")
                                     .frame(minWidth: 0, maxWidth: 300)
@@ -115,9 +109,7 @@ struct MainView: View {
                     }
                     
                         VStack {
-                            Button {
-                                registerUser()
-                            } label: {
+                            NavigationLink(destination: register()) {
                                 Text("Don't have an account? Register here!")
                                     .font(.headline)
                                     //.padding()
@@ -128,7 +120,7 @@ struct MainView: View {
                 
                 
                 Spacer()
-                
+    }
             }
             .accentColor(Color(.label))
             .onAppear {
@@ -145,15 +137,7 @@ struct MainView: View {
         
 
     
-    func login() {
-        Auth.auth().signIn(withEmail: email, password: password) { result, error in
-            if error != nil {
-                isUserLoggedIn = false
-                print(error!.localizedDescription)
-                print("Sorry, those details don't look quite right, please try again!")
-            }
-        }
-    }
+
     
   // } //Content view end
 
@@ -216,6 +200,8 @@ struct MainView: View {
     }
     
     struct register: View {
+        
+        @ObservedObject var model = ViewModel() // Check if there is a way to not repeat this.
         
         @State private var newEmail = ""
         @State private var newPassword = ""
@@ -308,7 +294,7 @@ struct MainView: View {
                         .foregroundColor(.white)
                         
                     Button {
-                        registerUser()
+                        model.registerUser()
                     } label: {
                         Text("Register")
                     }

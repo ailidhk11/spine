@@ -7,13 +7,13 @@
 
 import Foundation
 
-struct SpineBooks: Identifiable {
+struct SpineBook: Identifiable {
     
     // Check capitalisation of variable labels
     var id: String
-    var Author: String
-    var Genre: String
-    var Title: String
+    var author: String
+    var genre: String
+    var title: String
     
 }
 

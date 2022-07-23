@@ -11,38 +11,61 @@ import FirebaseFirestore
 class ViewModel: ObservableObject {
     
     
-    @Published var list = [SpineBooks]()
+    @Published var spineBooks: [SpineBook] = []
     
 
     
-    @Published var Author = ""
-    @Published var Title = ""
-    @Published var Genre = ""
+    @Published var author = ""
+    @Published var title = ""
+    @Published var genre = ""
     
     
     func getdata() {
         let db = Firestore.firestore()
+        let ref = db.collection("SpineBooks")
         
         
-        db.collection("spineBooks").getDocuments {snapshot, error in
+        ref.getDocuments {snapshot, error in
             
-            if error == nil {
+            guard error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
                 if let snapshot = snapshot {
-                    DispatchQueue.main.async {
-                        self.list = snapshot.documents.map {d in
+                    DispatchQueue.main.async { //what does this mean apart from syncing back to UI
+                        self.spineBooks = snapshot.documents.map {d in
 
-                            return SpineBooks(id: d.documentID,
-                                              Author: d["Author"] as? String ?? "",
-                                              Genre: d["Genre"] as? String ?? "",
-                                              Title: d["Title"] as? String ?? "")
+                            return SpineBook(id: d.documentID,
+                                              author: d["Author"] as? String ?? "",
+                                              genre: d["Genre"] as? String ?? "",
+                                              title: d["Title"] as? String ?? "")
                         }
                     }
                 }
-            }
+
         }
     }
     
+    @Published private var email = "" //Check if should be @State
+    @Published private var password = "" //Check if should be @State
+    @Published private var isUserLoggedIn = false
     
+    func registerUser() {
+        Auth.auth().createUser(withEmail: email, password: password) { result, error in
+            if error != nil {
+                print("Incorrect info")
+            }
+            
+        }
+    }
   
-    
+    func login() {
+        Auth.auth().signIn(withEmail: email, password: password) { result, error in
+            if error != nil {
+                self.isUserLoggedIn = false
+                print(error!.localizedDescription)
+                print("Sorry, those details don't look quite right, please try again!")
+            }
+        }
+    }
 }
