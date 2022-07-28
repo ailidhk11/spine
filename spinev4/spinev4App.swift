@@ -18,6 +18,7 @@ struct spinev4App: App {
     var body: some Scene {
         WindowGroup {
             MainView()
+                .environmentObject(ViewModel())
         }
     }
 }

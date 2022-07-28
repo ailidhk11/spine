@@ -3,11 +3,14 @@
 //  spinev4
 //
 //  Created by Ailidh Kinney on 20/07/2022.
-//
+//Cannot convert value of type 'Published<String>.Publisher' to expected argument type 'Binding<String>'
 
 import SwiftUI
 import Firebase
 import FirebaseFirestore
+
+
+
 
 
 struct MainView: View {
@@ -15,28 +18,34 @@ struct MainView: View {
 
 
         
-    @ObservedObject var model = ViewModel()
+    @EnvironmentObject var model: ViewModel
+    
+    
+    //State properties are normally declared in the view that depends on them
+   // @Published private var email = "" //Check if should be @State
+    //@Published private var password = "" //Check if should be @State
+    //@Published private var isUserLoggedIn = false
         
-    @State private var email = "" //Check if should be @State
-    @State private var password = "" //Check if should be @State
-    @State private var isUserLoggedIn = false
-        
+    //Determines which view to show if the user is logged in or not
     var body: some View {
-        if isUserLoggedIn == false {
+        if model.isUserLoggedIn == false {
             content
         } else {
-            homepage.init()
+            homepage()
         }
     }
     
+  
+
     var content: some View {
         NavigationView {
             
-            
+            //A ZStack to allow SAGE background
             ZStack {
                 Color("Sage")
                     .ignoresSafeArea()
                 
+                //A V Stack of the welcome text and an H Stack
                 VStack(spacing: 20) {
                     // Spacer()
                     
@@ -47,7 +56,7 @@ struct MainView: View {
                         .position(x: 140, y: 150)
                     
                     // Spacer()
-                    
+                    // An H stack of the image and a VStack
                     HStack {
                         Image("Books spine out ")
                             .resizable()
@@ -57,17 +66,19 @@ struct MainView: View {
                             .shadow(color: .gray, radius: 5, x: 0, y: 2)
                             .position(x: 120, y: -90)
                         
+                        // A V stack of email and password fields
                         VStack {
                             
                             //    Text("Email")
                             //     .font(.headline)
-                            TextField("Email", text: $email)
+                            TextField("Email", text: $model.email)
                             
-                                .placeholder(when: email.isEmpty) {
+                                .placeholder(when: model.email.isEmpty) {
                                     Text("Email")
                                 }
                                 .foregroundColor(.white)
                                 .position(x: 130, y: -130)
+                                .autocapitalization(.none)
                             
                             Rectangle()
                                 .frame(width:165, height:1)
@@ -78,12 +89,13 @@ struct MainView: View {
                             //    .font(.headline)
                             // Space before password to move word slightly
                             
-                            SecureField("Password", text: $password)
-                                .placeholder(when: password.isEmpty) {
+                            SecureField("Password", text: $model.password)
+                                .placeholder(when: model.password.isEmpty) {
                                     Text("Password")
                                 }
                                 .foregroundColor(.white)
                                 .position(x: 130, y: -210)
+                                .autocapitalization(.none)
                             
                             Rectangle()
                                 .frame(width:165, height:1)
@@ -91,9 +103,9 @@ struct MainView: View {
                                 .position(x: 105, y: -270)
                             
                             
-                            
+                            //The login button to take us to the home page
                             Button {
-                                model.login()
+                                model.login(email: model.email, password: model.password)
                             } label: {
                                 Text("Log In")
                                     .frame(minWidth: 0, maxWidth: 300)
@@ -115,6 +127,8 @@ struct MainView: View {
                                     //.padding()
                                     .foregroundColor(.white)
                             } //.position(x: 250, y: -120)
+
+
                     }
                 }
                 
@@ -124,9 +138,10 @@ struct MainView: View {
             }
             .accentColor(Color(.label))
             .onAppear {
+                //Check what addStateDidChangeListener means?
                 Auth.auth().addStateDidChangeListener { auth, user in
                     if user != nil {
-                        isUserLoggedIn.toggle()
+                        model.isUserLoggedIn.toggle()
                     }
                 }
             }
@@ -145,9 +160,9 @@ struct MainView: View {
 
     struct homepage: View {
         
-        @ObservedObject var model = ViewModel()
+        @EnvironmentObject var model: ViewModel
         
-        
+
         
         var body: some View {
             ZStack {
@@ -157,10 +172,21 @@ struct MainView: View {
                 
                 VStack {
                     
+                    Button {
+                        
+                      model.signOut()
+
+                    } label: {
+                        Text("Sign out")
+                    }
+                    .fullScreenCover(isPresented: $model.isUserLoggedIn, onDismiss: nil) {
+                        MainView()
+                    }
                     
                     Text("Welcome back, Ailidh!")
                         .font(.largeTitle)
                         .foregroundColor(.white)
+                        
                     //.position(x: 205, y: 120)
                     
                     
@@ -201,18 +227,16 @@ struct MainView: View {
     
     struct register: View {
         
-        @ObservedObject var model = ViewModel() // Check if there is a way to not repeat this.
-        
-        @State private var newEmail = ""
-        @State private var newPassword = ""
-        @State private var confirmPassword = ""
-        @State private var name = ""
-        @State private var dob = Date()
+        @EnvironmentObject var model: ViewModel
+          
+        @State  var newEmail = ""
+        @State var newPassword = ""
+        @State var confirmPassword = ""
+        @State var name = ""
+        @State  var dob = Date()
         
         var body: some View {
-            
-            
-            
+
             ZStack {
                 Color("Sage")
                     .ignoresSafeArea()
@@ -223,6 +247,7 @@ struct MainView: View {
                         .font(.largeTitle)
                         .bold()
                         .foregroundColor(.white)
+                        .padding()
                     
                     TextField("Name", text: $name)
                         .placeholder(when: name.isEmpty) {
@@ -247,10 +272,11 @@ struct MainView: View {
 
                         DatePicker (
                             "",
-                            selection: $dob
-                            ).foregroundColor(.white)
+                            selection: $dob,
+                            displayedComponents: [.date]
+                            ).accentColor(.black)
                             .padding()
-                            .font(.subheadline)
+                            
                     }
                     
                     TextField("Email address", text: $newEmail)
@@ -260,6 +286,7 @@ struct MainView: View {
                         .padding(20)
                         .foregroundColor(.white)
                         .font(.title)
+                        .autocapitalization(.none)
                         
         
                     
@@ -269,13 +296,14 @@ struct MainView: View {
                     
                     VStack {
                     
-                    SecureField("Password", text: $newPassword)
-                        .placeholder(when: newPassword.isEmpty) {
+                        SecureField("Password", text: $newPassword)
+                            .placeholder(when: newPassword.isEmpty) {
                             Text("Password")
                         }
                         .padding()
                         .foregroundColor(.white)
                         .font(.title)
+                        .autocapitalization(.none)
                     
                     Rectangle()
                         .frame(width:400, height:1)
@@ -288,15 +316,22 @@ struct MainView: View {
                         .padding()
                         .foregroundColor(.white)
                         .font(.title)
+                        .autocapitalization(.none)
                     
                     Rectangle()
                         .frame(width:400, height:1)
                         .foregroundColor(.white)
                         
+                    Spacer()
+                        
                     Button {
-                        model.registerUser()
+                        model.registerUser(email: newEmail, password: newPassword)
                     } label: {
                         Text("Register")
+                            .foregroundColor(.white)
+                            .bold()
+                            .font(.title2)
+                            .padding()
                     }
                     
                     Spacer()
@@ -313,7 +348,54 @@ struct MainView: View {
         
     }
 
+    struct search: View {
+        
+        @ObservedObject var model = ViewModel()
 
+        
+        var body: some View {
+            
+            NavigationView {
+                
+                VStack {
+                    
+                    List(model.list) {item in
+                        
+                        HStack {
+                            
+                            Text(item.title)
+                            
+                            Divider()
+
+                            
+                            Text(item.author)
+                            
+                            //Only add if necessary later
+                          /*  Button  (action: {
+                                //see more about book
+                            }, label: {
+                                Image(systemName: "arrowshape.turn.up.right.circle")
+                            }) */
+                            
+                            Divider()
+                            
+                            Button (action: {
+                                //add to TBR or currentlry reading - maybe a pop up?
+                            }, label: {
+                                Image(systemName: "plus")
+                            })
+   
+                        }
+                        
+                    }
+                }
+        
+          
+            }
+        }
+    }
+
+    
 
 
     struct ContentView_Previews: PreviewProvider {
@@ -333,7 +415,15 @@ struct MainView: View {
             register()
         }
     }
+    
+    struct search_Previews: PreviewProvider {
+        static var previews: some View {
+            search()
+        }
+    }
 }
+    
+
 
 extension View {
     func placeholder<Content: View>(

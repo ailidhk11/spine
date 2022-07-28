@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct SpineBook: Identifiable {
     
@@ -15,5 +16,9 @@ struct SpineBook: Identifiable {
     var genre: String
     var title: String
     
+
+    
 }
+
+
 
